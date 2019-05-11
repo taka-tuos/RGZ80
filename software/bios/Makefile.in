@@ -1,0 +1,31 @@
+MAKE		= make -r
+OBJCOPY		= objcopy
+SDCC		= sdcc
+SDASZ80		= sdasz80
+SDLDZ80		= sdldz80
+DEL			= rm
+COPY		= cp
+
+default :
+	$(MAKE) rom
+
+rom : $(OBJS_TARGET) Makefile
+	$(MAKE) -C ../zcrt
+	$(SDLDZ80) -i $(LFLAGS) $(TARGET).ihx ../zcrt/zcrt0.o $(OBJS_TARGET)
+	$(OBJCOPY) -I ihex -O binary $(TARGET).ihx $(TARGET).rom
+	$(COPY) $(TARGET).rom ../../roms/
+
+clean :
+	-$(DEL) *.o
+	-$(DEL) *.ihx
+	-$(DEL) *.lk
+	-$(DEL) *.map
+	-$(DEL) *.lst
+	-$(DEL) *.asm
+	-$(DEL) *.rel
+	-$(DEL) *.sym
+	-$(DEL) *.bim
+	-$(DEL) *.rom
+
+%.o : %.c Makefile
+	$(SDCC) $(CFLAGS) -o $*.o -c $*.c

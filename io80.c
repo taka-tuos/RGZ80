@@ -3,9 +3,12 @@
 extern byte *z80_memory;
 extern int psg_period[3];
 extern int psg_volume[3];
+extern int psg_count[3];
 extern SDL_Joystick *joy;
 
 int rgz_wait = 0;
+
+int rgz_time = 0;
 
 byte io80_readm(int param, ushort address)
 {
@@ -68,6 +71,9 @@ byte io80_readp(int param, ushort address)
 		ret |= kmode[RG_SELECT] << 6;
 		ret |= kmode[RG_START] << 7;
 		break;
+	case 0x81:
+		if(SDL_GetTicks() >= rgz_time) ret |= 1;
+		break;
 	}
 
 	return ret;
@@ -78,17 +84,24 @@ void io80_writep(int param, ushort address, byte data)
 	int tmp;
 	
 	switch(address & 0xff) {
+	case 0x81:
+		rgz_time = SDL_GetTicks() + data;
+		break;
 	case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5:
 		rgz_wait += 16;
 		
 		tmp = psg_period[(address >> 1) & 3];
 		
-		if(address & 1) tmp &= 0x0f;
-		else tmp &= 0xf0;
+		if(address & 1) tmp &= 0x00ff;
+		else tmp &= 0xff00;
 		
-		tmp |= data << ((address & 0x0f) * 8);
+		tmp |= data << ((address & 0x01) * 8);
+		
+		psg_count[(address >> 1) & 3] = 0;
 		
 		psg_period[(address >> 1) & 3] = tmp;
+		
+		printf("[%d]%d Hz(%04x,%02x,%02x)\n",(address >> 1) & 3,44100/tmp,tmp,address,data);
 		
 		break;
 	case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5:
@@ -96,12 +109,14 @@ void io80_writep(int param, ushort address, byte data)
 		
 		tmp = psg_volume[(address >> 1) & 3];
 		
-		if(address & 1) tmp &= 0x0f;
-		else tmp &= 0xf0;
+		if(address & 1) tmp &= 0x00ff;
+		else tmp &= 0xff00;
 		
-		tmp |= data << ((address & 0x0f) * 8);
+		tmp |= data << ((address & 1) * 8);
 		
 		psg_volume[(address >> 1) & 3] = tmp;
+		
+		printf("[%d]%d %(%04x,%02x,%02x)\n",(address >> 1) & 3,tmp*100/8192,tmp,address,data);
 		
 		break;
 	}

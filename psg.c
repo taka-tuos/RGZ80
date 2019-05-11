@@ -11,7 +11,7 @@ char psg_signal[3];
 
 #define PSG_VOL 8192
 
-#define FREQ	22050
+#define FREQ	44100
 
 void callback_psg(void *unused, Uint8 *stream, int len)
 {
@@ -27,16 +27,16 @@ void callback_psg(void *unused, Uint8 *stream, int len)
 				continue;
 			}
 			
-			psg_count[i]++;
+			psg_count[j]++;
 			
-			if(psg_count[i] == psg_period[j]) {
-				psg_signal[i] ^= 1;
-				psg_count[i] = 0;
+			if(psg_count[j] == psg_period[j]) {
+				psg_signal[j] ^= 1;
+				psg_count[j] = 0;
 			}
 			
-			vol = vol + psg_signal[i] * PSG_VOL * psg_volume[i] / 16;
+			vol = vol + psg_signal[j] * psg_volume[j];
 		}
-		*frames++ += vol;
+		frames[i] = vol;
 	}
 }
 
@@ -59,7 +59,7 @@ void init_psg(void)
 	Desired.freq= FREQ; /* Sampling rate: 22050Hz */
 	Desired.format= AUDIO_S16; /* 16-bit signed audio */
 	Desired.channels= 1; /* Mono */
-	Desired.samples= FREQ/100; /* Buffer size: 2205000B = 10 sec. */
+	Desired.samples= FREQ/60; /* Buffer size: 2205000B = 10 sec. */
 	Desired.callback = callback_psg;
 	Desired.userdata = NULL;
 
