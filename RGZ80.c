@@ -50,9 +50,9 @@ void z80_execute(Z80Context *z80)
 		
 		z80->tstates += rgz_wait;
 		rgz_wait = 0;
-		
-		Z80INT(z80,0);
 	}
+	
+	//Z80INT(z80,0);
 }
 
 struct dirent *roms[512];
