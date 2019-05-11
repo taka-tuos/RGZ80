@@ -5,6 +5,7 @@
 #define MHZ				6.0f
 
 byte *z80_memory;
+Z80Context *g_z80;
 
 int poll_event(SDL_Event *sdl_event)
 {
@@ -178,6 +179,8 @@ int main(int argc, char *argv[])
 	memset(z80_memory,0xff,0x10000);
 
 	Z80Context z80;
+	
+	g_z80 = &z80;
 	
 	memset(&z80,0,sizeof(Z80Context));
 	

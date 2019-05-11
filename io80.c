@@ -1,6 +1,7 @@
 #include "RGZ80.h"
 
 extern byte *z80_memory;
+extern Z80Context *g_z80;
 extern int psg_period[3];
 extern int psg_volume[3];
 extern int psg_count[3];
@@ -9,6 +10,8 @@ extern SDL_Joystick *joy;
 int rgz_wait = 0;
 
 int rgz_time = 0;
+
+#define TICKS (g_z80->tstates / (6000))
 
 byte io80_readm(int param, ushort address)
 {
@@ -72,7 +75,7 @@ byte io80_readp(int param, ushort address)
 		ret |= kmode[RG_START] << 7;
 		break;
 	case 0x81:
-		if(SDL_GetTicks() >= rgz_time) ret |= 1;
+		if(TICKS >= rgz_time) ret |= 1;
 		break;
 	}
 
@@ -85,7 +88,7 @@ void io80_writep(int param, ushort address, byte data)
 	
 	switch(address & 0xff) {
 	case 0x81:
-		rgz_time = SDL_GetTicks() + data;
+		rgz_time = TICKS + data + 1;
 		break;
 	case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5:
 		rgz_wait += 16;
