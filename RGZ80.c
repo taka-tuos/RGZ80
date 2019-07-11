@@ -2,7 +2,7 @@
 #include "libgpu.h"
 
 #define FPS				60.0f
-#define MHZ				6.0f
+#define MHZ				66.0f
 
 byte *z80_memory;
 Z80Context *g_z80;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 	
 	joy = SDL_JoystickOpen(0);
 
-	sdl_screen = SDL_SetVideoMode(640,400,32,SDL_SWSURFACE);
+	sdl_screen = SDL_SetVideoMode(512,384,32,SDL_SWSURFACE);
 
 	init_psg();
 
@@ -198,6 +198,8 @@ int main(int argc, char *argv[])
 	z80.ioWrite = io80_writep;
 
 	libgpu_init();
+	
+	init_vdp();
 	
 	memset(z80_memory,0xff,0x8000);
 	
@@ -239,7 +241,7 @@ int main(int argc, char *argv[])
 		}
 		z80_execute(&z80);
 		adjustFPS();
-		if((s_frame & 1) == 0) rgz_grefresh(sdl_screen);
+		rgz_grefresh(sdl_screen);
 		SDL_UpdateRect(sdl_screen,0,0,0,0);
 		s_frame++;
 	}

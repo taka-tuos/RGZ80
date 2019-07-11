@@ -88,11 +88,10 @@ extern "C" {
 
 #define NULL ((void *)0)
 
-unsigned char io80_readm(void *ext, unsigned long address);
-void io80_writem(void *ext, unsigned long address, unsigned char data);
-
-unsigned char io80_readp(void *ext, unsigned long address);
-void io80_writep(void *ext, unsigned long address, unsigned char data);
+byte io80_readm(int param, ushort address);
+void io80_writem(int param, ushort address, byte data);
+byte io80_readp(int param, ushort address);
+void io80_writep(int param, ushort address, byte data);
 
 #define Z80_READ_BYTE(address, x)										\
 {																		\

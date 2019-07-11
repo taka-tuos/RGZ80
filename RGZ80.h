@@ -8,9 +8,12 @@ byte io80_readp(int param, ushort address);
 void io80_writep(int param, ushort address, byte data);
 
 void rgz_grefresh(SDL_Surface *sdl_screen);
+void init_vdp(void);
 
 void init_psg(void);
 void reset_psg(void);
+
+void PixelShader(int x, int y, int u, int v, int r, int g, int b);;
 
 enum {
 	RG_TRIG1,
