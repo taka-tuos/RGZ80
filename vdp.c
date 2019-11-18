@@ -47,9 +47,10 @@ void init_vdp(void)
 	fifo32_init(gpu_fifo, 4096, (void **)malloc(4096*sizeof(void *)));
 }
 
-void rgz_grefresh(SDL_Surface *sdl_screen)
+void rgz_grefresh(SDL_Surface *sdl_screen, int scan)
 {
-	for(int y = 0; y < 384; y+=2) {
+	int st = scan != -1 ? scan : 0;
+	for(int y = st; y < 384; y+=2) {
 		for(int x = 0; x < 512; x++) {
 			Uint8 *q = &rgz_vram[rgz_vram_disp][(y/2)*256+(x/2)];
 			Uint32 *p = &((Uint32 *)sdl_screen->pixels)[y*(sdl_screen->pitch/4)+x];
@@ -62,7 +63,7 @@ void rgz_grefresh(SDL_Surface *sdl_screen)
 			*p |= colorpalette[dot*3+1] << 8;
 			*p |= colorpalette[dot*3+2] << 0;
 			
-			p[sdl_screen->pitch/4] = *p;
+			if(scan == -1) p[sdl_screen->pitch/4] = *p;
 		}
 	}
 	rgz_vsync = 1;

@@ -1,0 +1,25 @@
+GPU FIFO FORMAT
+
+BIG ENDIAN
+|xx| : 8bit
+|xxxx| : 16bit
+
+bitblt[ram-vram]
+|00|X   |Y   |W   |H   |P   |
+P : src bitmap addr
+
+bitblt[vram-ram]
+|01|X   |Y   |W   |H   |P   |
+P : dst bitmap addr
+
+bitblt[vram-vram]
+|02|X1  |Y1  |W   |H   |X2  |Y2  |
+X1,Y1 : src
+X2,Y2 : dst
+
+drawpoly[flat]
+|03|X1  |Y1  |X2  |Y2  |X3  |Y3  |C |
+C : Color
+
+drawpoly[textured]
+|04|X1  |Y1  |X2  |Y2  |X3  |Y3  |U1  |V1  |U2  |V2  |U3  |V3  |

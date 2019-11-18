@@ -24,13 +24,11 @@ int rgz_addr = 0;
 
 byte io80_readm(int param, ushort address)
 {
-	rgz_wait++;
 	return z80_memory[address];
 }
 
 void io80_writem(int param, ushort address, byte data)
 {
-	rgz_wait++;
 	z80_memory[address] = data;
 }
 

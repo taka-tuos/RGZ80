@@ -2,7 +2,7 @@
 #include "libgpu.h"
 
 #define FPS				60.0f
-#define MHZ				66.0f
+#define MHZ				33.0f
 
 byte *z80_memory;
 Z80Context *g_z80;
@@ -28,7 +28,7 @@ void adjustFPS(void) {
 	sleeptime=(frame<FPS)?
 		(maetime+(long)((float)frame*(1000.0f/FPS))-SDL_GetTicks()):
 		(maetime+1000-SDL_GetTicks());
-	if(sleeptime>0)SDL_Delay(sleeptime);
+		if(sleeptime>0) { /*printf("%dms sleep\n", sleeptime);*/ SDL_Delay(sleeptime); }
 	if(frame>=FPS) {
 		frame=0;
 		maetime=SDL_GetTicks();
@@ -206,7 +206,10 @@ int main(int argc, char *argv[])
 	chld_rom(sdl_screen);
 	
 	int s_frame = 0;
+	int t_frame = 0;
 
+	int t=SDL_GetTicks();
+	
 	while(!poll_event(&sdl_event)) {
 		if(SDL_JoystickGetButton(joy,4) && SDL_JoystickGetButton(joy,5)) {
 			reset_psg();
@@ -241,9 +244,15 @@ int main(int argc, char *argv[])
 		}
 		z80_execute(&z80);
 		adjustFPS();
-		rgz_grefresh(sdl_screen);
+		if(s_frame & 1) rgz_grefresh(sdl_screen, -1);
 		SDL_UpdateRect(sdl_screen,0,0,0,0);
 		s_frame++;
+		t_frame++;
+		if(SDL_GetTicks()-t >= 1000) {
+			printf("%02d FPS\n",t_frame);
+			t_frame = 0;
+			t=SDL_GetTicks();
+		}
 	}
 
 	SDL_JoystickClose(joy);

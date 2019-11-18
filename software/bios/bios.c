@@ -183,13 +183,13 @@ static const int sbox[2*4] = {
 #define RX(x,y,r) (((x) * cos(i)) >> 6) - (((y) * sin(i)) >> 6)
 #define RY(x,y,r) (((x) * sin(i)) >> 6) + (((y) * cos(i)) >> 6)
 
-#define NUM 32
+#define NUM 128
 
 void main()
 {
-	int x[NUM],y[NUM];
-	int u[NUM],v[NUM];
-	unsigned char c[NUM],o[NUM];
+	static int x[NUM],y[NUM];
+	static int u[NUM],v[NUM];
+	static unsigned char c[NUM],o[NUM];
 	
 	srand();
 	
