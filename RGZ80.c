@@ -23,7 +23,7 @@ void adjustFPS(void) {
 	static unsigned long maetime=0;
 	static int frame=0;
 	long sleeptime;
-	if(!maetime) SDL_GetTicks();
+	if(!maetime) maetime=SDL_GetTicks();
 	frame++;
 	sleeptime=(frame<FPS)?
 		(maetime+(long)((float)frame*(1000.0f/FPS))-SDL_GetTicks()):
