@@ -140,10 +140,6 @@ void vdp_drawtrigon(int *xv, int *yv, int c)
 		}
 	}
 	
-	/*for(int i=0;i<3;i++) {
-		printf("p[%d]=%d,%d/%d,%d\n",i,xv[i],yv[i],x[i],y[i]);
-	}*/
-	
 	for(int i=0;i<3;i++) {
 		int x1=x[i],y1=y[i],x2=x[(i+1)%3],y2=y[(i+1)%3];
 		m[i][0] = x1 < x2 ? x1 : x2;
@@ -164,15 +160,11 @@ void vdp_drawtrigon(int *xv, int *yv, int c)
 		int xa,xb;
 		int tmp;
 		
-		//printf("phase: y=%d\n",i);
-		
 		if(m[0][2] <= i && m[0][3] > i) {
 			xa = s[0][i];
-			//printf("xa=[0],");
 		}
 		if(m[1][2] <= i && m[1][3] > i) {
 			xa = s[1][i];
-			//printf("xa=[1],");
 		}
 		if(m[2][2] <= i && m[2][3] > i) {
 			xb = s[2][i];
@@ -183,9 +175,6 @@ void vdp_drawtrigon(int *xv, int *yv, int c)
 			xa=xb;
 			xb=tmp;
 		}
-		
-		//printf("%d\n",xa);
-		//printf("xb=[2],%d\n",xb);
 		
 		if(xa >= xmax || xb < xmin) continue;
 		if(xa < xmin) xa = xmin;
@@ -239,10 +228,6 @@ void vdp_flush(void)
 			vdp_drawtrigon(x,y,c);
 		}
 	}
-	
-	//printf("\n");
-	//printf("\n");
-	//printf("\n");
 }
 
 void rgz_grefresh(SDL_Surface *sdl_screen, int scan)

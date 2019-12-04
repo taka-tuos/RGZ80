@@ -273,42 +273,7 @@ void main()
 			drawpoly(tbox[0]*2,tbox[1],tbox[2]*2,tbox[3],tbox[4]*2,tbox[5],c[i]);
 			drawpoly(tbox[0]*2,tbox[1],tbox[6]*2,tbox[7],tbox[4]*2,tbox[5],c[i]);
 		}
-		/*int tbox[2*4];
-		int q,p;
-		int nc = 3;
-		q = 192;
-		p = -2;
-		tbox[0] = sbox[0] + q;
-		tbox[1] = sbox[1] + p;
 		
-		tbox[2] = sbox[2] + q;
-		tbox[3] = sbox[3] + p;
-		
-		tbox[4] = sbox[4] + q;
-		tbox[5] = sbox[5] + p;
-		
-		tbox[6] = sbox[6] + q;
-		tbox[7] = sbox[7] + p;
-		//drawpoly(tbox[0]*2,tbox[1],tbox[2]*2,tbox[3],tbox[4]*2,tbox[5],nc);
-		drawpoly(tbox[0]*2,tbox[1],tbox[6]*2,tbox[7],tbox[4]*2,tbox[5],nc);
-		
-		q = 64;
-		p = -5;
-		tbox[0] = sbox[0] + q;
-		tbox[1] = sbox[1] + p;
-		
-		tbox[2] = sbox[2] + q;
-		tbox[3] = sbox[3] + p;
-		
-		tbox[4] = sbox[4] + q;
-		tbox[5] = sbox[5] + p;
-		
-		tbox[6] = sbox[6] + q;
-		tbox[7] = sbox[7] + p;
-		//drawpoly(tbox[0]*2,tbox[1],tbox[2]*2,tbox[3],tbox[4]*2,tbox[5],nc);
-		//drawpoly(tbox[0]*2,tbox[1],tbox[6]*2,tbox[7],tbox[4]*2,tbox[5],nc);
-		
-		*/
 		io_out(0xc0,0);
 		io_out(0x82,0);
 	}
