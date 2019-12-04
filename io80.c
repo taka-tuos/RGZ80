@@ -1,5 +1,4 @@
 #include "RGZ80.h"
-#include "a3d.h"
 #include <stdint.h>
 #include "z80user.h"
 #include "fifo.h"
@@ -13,7 +12,7 @@ extern SDL_Joystick *joy;
 extern int rgz_vsync;
 extern int rgz_vram_disp;
 
-fifo32_t *gpu_fifo;
+fifo_t *gpu_fifo;
 
 int rgz_wait = 0;
 
@@ -88,38 +87,12 @@ byte io80_readp(int param, ushort address)
 		ret = rgz_vsync;
 		rgz_vsync = 0;
 		break;
+	case 0xc1:
+		ret = fifo_get(gpu_fifo);
+		break;
 	}
 
 	return ret;
-}
-
-void io80_drawpoly()
-{
-	short x[3],y[3], c;
-	Z80_READ_WORD(rgz_addr+ 0, x[0]);
-	Z80_READ_WORD(rgz_addr+ 2, y[0]);
-	Z80_READ_WORD(rgz_addr+ 4, x[1]);
-	Z80_READ_WORD(rgz_addr+ 6, y[1]);
-	Z80_READ_WORD(rgz_addr+ 8, x[2]);
-	Z80_READ_WORD(rgz_addr+10, y[2]);
-	Z80_READ_WORD(rgz_addr+12, c);
-	
-	a3d_vertex v[3];
-	
-	c &= 0x0f;
-	
-	v[0].c = c;
-	
-	v[0].x = x[0];
-	v[0].y = y[0];
-	v[1].x = x[1];
-	v[1].y = y[1];
-	v[2].x = x[2];
-	v[2].y = y[2];
-	
-	a3d_drawpoly_F3(v);
-	
-	//printf("POLY\n");
 }
 
 void io80_writep(int param, ushort address, byte data)
@@ -144,7 +117,10 @@ void io80_writep(int param, ushort address, byte data)
 		//printf("%04x\n",rgz_addr);
 		break;
 	case 0xc0:
-		io80_drawpoly();
+		vdp_flush();
+		break;
+	case 0xc1:
+		fifo_put(gpu_fifo,data);
 		break;
 	case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5:
 		rgz_wait += 16;

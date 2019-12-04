@@ -134,7 +134,6 @@ void delay(int n)
 void set_ch(int ch, int no)
 {
 	int freq = noteFreq[no];
-	
 	int regofs = ch << 1;
 	
 	if(!no) {
@@ -150,9 +149,29 @@ void set_ch(int ch, int no)
 	io_out(0xf0+regofs+1,0);
 }
 
+void fifoput8(unsigned char b)
+{
+	io_out(0xc1,b);
+}
+
+void fifoput16s(short w)
+{
+	fifoput8(w & 0xff);
+	fifoput8((w >> 8) & 0xff);
+}
+
 void drawpoly(int x1, int y1, int x2, int y2, int x3, int y3, int c)
 {
-	short v[2+2+2+1];
+	fifoput8(4);
+	fifoput16s(x1);
+	fifoput16s(y1);
+	fifoput16s(x2);
+	fifoput16s(y2);
+	fifoput16s(x3);
+	fifoput16s(y3);
+	fifoput8(c);
+	/*short v[2+2+2+1];
+	
 	v[0] = x1;
 	v[1] = y1;
 	
@@ -170,7 +189,7 @@ void drawpoly(int x1, int y1, int x2, int y2, int x3, int y3, int c)
 	io_out(0xb0,vl);
 	io_out(0xb1,vh);
 	
-	io_out(0xc0,0);
+	io_out(0xc0,0);*/
 }
 
 static const int sbox[2*4] = {
@@ -222,6 +241,10 @@ void main()
 			if(x[i] >= 256*16 || x[i] < 0) u[i] = -u[i];
 			if(y[i] >= 192*16 || y[i] < 0) v[i] = -v[i];
 			
+			//q = 128;
+			//p = -2;
+			
+#if 0
 			tbox[0] = RX(sbox[0],sbox[1],r) + q;
 			tbox[1] = RY(sbox[0],sbox[1],r) + p;
 			
@@ -233,10 +256,60 @@ void main()
 			
 			tbox[6] = RX(sbox[6],sbox[7],r) + q;
 			tbox[7] = RY(sbox[6],sbox[7],r) + p;
+#endif
+			
+			tbox[0] = sbox[0] + q;
+			tbox[1] = sbox[1] + p;
+			
+			tbox[2] = sbox[2] + q;
+			tbox[3] = sbox[3] + p;
+			
+			tbox[4] = sbox[4] + q;
+			tbox[5] = sbox[5] + p;
+			
+			tbox[6] = sbox[6] + q;
+			tbox[7] = sbox[7] + p;
 			
 			drawpoly(tbox[0]*2,tbox[1],tbox[2]*2,tbox[3],tbox[4]*2,tbox[5],c[i]);
 			drawpoly(tbox[0]*2,tbox[1],tbox[6]*2,tbox[7],tbox[4]*2,tbox[5],c[i]);
 		}
+		/*int tbox[2*4];
+		int q,p;
+		int nc = 3;
+		q = 192;
+		p = -2;
+		tbox[0] = sbox[0] + q;
+		tbox[1] = sbox[1] + p;
+		
+		tbox[2] = sbox[2] + q;
+		tbox[3] = sbox[3] + p;
+		
+		tbox[4] = sbox[4] + q;
+		tbox[5] = sbox[5] + p;
+		
+		tbox[6] = sbox[6] + q;
+		tbox[7] = sbox[7] + p;
+		//drawpoly(tbox[0]*2,tbox[1],tbox[2]*2,tbox[3],tbox[4]*2,tbox[5],nc);
+		drawpoly(tbox[0]*2,tbox[1],tbox[6]*2,tbox[7],tbox[4]*2,tbox[5],nc);
+		
+		q = 64;
+		p = -5;
+		tbox[0] = sbox[0] + q;
+		tbox[1] = sbox[1] + p;
+		
+		tbox[2] = sbox[2] + q;
+		tbox[3] = sbox[3] + p;
+		
+		tbox[4] = sbox[4] + q;
+		tbox[5] = sbox[5] + p;
+		
+		tbox[6] = sbox[6] + q;
+		tbox[7] = sbox[7] + p;
+		//drawpoly(tbox[0]*2,tbox[1],tbox[2]*2,tbox[3],tbox[4]*2,tbox[5],nc);
+		//drawpoly(tbox[0]*2,tbox[1],tbox[6]*2,tbox[7],tbox[4]*2,tbox[5],nc);
+		
+		*/
+		io_out(0xc0,0);
 		io_out(0x82,0);
 	}
 }

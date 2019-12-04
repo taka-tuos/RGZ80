@@ -1,8 +1,8 @@
 #include "RGZ80.h"
 #include "libgpu.h"
 
-#define FPS				60.0f
-#define MHZ				33.0f
+#define FPS				60.0
+#define MCYCLE			6
 
 byte *z80_memory;
 Z80Context *g_z80;
@@ -26,7 +26,7 @@ void adjustFPS(void) {
 	if(!maetime) maetime=SDL_GetTicks();
 	frame++;
 	sleeptime=(frame<FPS)?
-		(maetime+(long)((float)frame*(1000.0f/FPS))-SDL_GetTicks()):
+		(maetime+(long)((double)frame*(1000.0f/FPS))-SDL_GetTicks()):
 		(maetime+1000-SDL_GetTicks());
 		if(sleeptime>0) { /*printf("%dms sleep\n", sleeptime);*/ SDL_Delay(sleeptime); }
 	if(frame>=FPS) {
@@ -46,7 +46,7 @@ void z80_execute(Z80Context *z80)
 	
 	tstates = z80->tstates;
 	
-	for(elim = 0; (int)((unsigned long)z80->tstates - tstates) < MHZ*1000.0f*1000.0f/FPS;elim++) {
+	for(elim = 0; /*(int)((unsigned long)z80->tstates - tstates)*/elim < MCYCLE*1000*1000/FPS;elim++) {
 		Z80Execute(z80);
 		
 		z80->tstates += rgz_wait;

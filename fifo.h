@@ -1,13 +1,16 @@
+#include <stdint.h>
+
 #ifndef __FIFO__
 #define __FIFO__
 
 typedef struct {
-	void **buf;
+	uint8_t *buf;
 	int p, q, size, free, flags;
-} fifo32_t;
-void fifo32_init(fifo32_t *fifo, int size, void **buf);
-int fifo32_put(fifo32_t *fifo, void *data);
-void *fifo32_get(fifo32_t *fifo);
-int fifo32_status(fifo32_t *fifo);
+} fifo_t;
+
+void fifo_init(fifo_t *fifo, int size, uint8_t *buf);
+int fifo_put(fifo_t *fifo, uint8_t data);
+uint8_t fifo_get(fifo_t *fifo);
+int fifo_status(fifo_t *fifo);
 
 #endif

@@ -4,7 +4,7 @@
 
 #define FLAGS_OVERRUN		0x0001
 
-void fifo32_init(fifo32_t *fifo, int size, void **buf)
+void fifo_init(fifo_t *fifo, int size, uint8_t *buf)
 /* FIFOバッファの初期化 */
 {
 	fifo->size = size;
@@ -16,7 +16,7 @@ void fifo32_init(fifo32_t *fifo, int size, void **buf)
 	return;
 }
 
-int fifo32_put(fifo32_t *fifo, void *data)
+int fifo_put(fifo_t *fifo, uint8_t data)
 /* FIFOへデータを送り込んで蓄える */
 {
 	if (fifo->free == 0) {
@@ -33,10 +33,10 @@ int fifo32_put(fifo32_t *fifo, void *data)
 	return 0;
 }
 
-void *fifo32_get(fifo32_t *fifo)
+uint8_t fifo_get(fifo_t *fifo)
 /* FIFOからデータを一つとってくる */
 {
-	void *data;
+	uint8_t data;
 	if (fifo->free == fifo->size) {
 		/* バッファが空っぽのときは、とりあえず-1が返される */
 		return -1;
@@ -50,7 +50,7 @@ void *fifo32_get(fifo32_t *fifo)
 	return data;
 }
 
-int fifo32_status(fifo32_t *fifo)
+int fifo_status(fifo_t *fifo)
 /* どのくらいデータが溜まっているかを報告する */
 {
 	return fifo->size - fifo->free;

@@ -9,6 +9,8 @@ void io80_writep(int param, ushort address, byte data);
 
 void rgz_grefresh(SDL_Surface *sdl_screen, int scan);
 void init_vdp(void);
+void vdp_flush(void);
+
 
 void init_psg(void);
 void reset_psg(void);

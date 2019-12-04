@@ -2,47 +2,53 @@ GPU FIFO FORMAT
 
 NOTE : HWT(HW Transform) puts result to fifo
 
-data is BIG ENDIAN
+data is LITTLE ENDIAN
 |xx| : 8bit
 |xxxx| : 16bit
 |xxxxxxxx| : 32bit(Only HWT position input, IEEE754/32bit)
 
-bitblt[ram-vram]
-|00|X   |Y   |W   |H   |P   |
+Clear
+|00|C |
+C : Color
+
+BitBlt[ram-vram]
+|01|X   |Y   |W   |H   |P   |
 P : src bitmap addr
 
-bitblt[vram-ram]
-|01|X   |Y   |W   |H   |P   |
+BitBlt[vram-ram]
+|02|X   |Y   |W   |H   |P   |
 P : dst bitmap addr
 
-bitblt[vram-vram]
-|02|X1  |Y1  |W   |H   |X2  |Y2  |
+BitBlt[vram-vram]
+|03|X1  |Y1  |W   |H   |X2  |Y2  |
 X1,Y1 : src
 X2,Y2 : dst
 
-drawpoly[flat]
-|03|X1  |Y1  |X2  |Y2  |X3  |Y3  |C |
+DrawTrigon
+|04|X1  |Y1  |X2  |Y2  |X3  |Y3  |C |
 C : Color
 
-drawpoly[textured]
-|04|X1  |Y1  |X2  |Y2  |X3  |Y3  |U1  |V1  |U2  |V2  |U3  |V3  |
-
-drawline
+DrawLine
 |05|X1  |Y1  |X2  |Y2  |C |
 C : Color
 
-HWT[rotation2d]
+SetTransColor
+|06|C |
+C : Color(>0x0f : no tranparent)
+note : apply to all drawing funtion
+
+HWT[Rotation2D]
 |80|X       |Y       |CX      |CY      |A       |
 CX,CY : Rotation center
 A : Angle
 
-HWT[rotation3d]
+HWT[Rotation3D]
 |81|X       |Y       |Z       |CX      |CY      |CZ      |AX      |AY      |AZ      |A       |
 CX,CY,CZ: Rotation center
 AX,AY,AZ: Rotation axis
 A : Angle
 
-HWT[perse3d]
+HWT[PerseTransform]
 |82|X       |Y       |Z       |F       |H        |
 F : Far position
 H : Screen height(when Y=H(Z=0), return Y is 200)
