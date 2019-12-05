@@ -32,8 +32,12 @@ DrawLine
 |05|X1  |Y1  |X2  |Y2  |C |
 C : Color
 
+DrawBox
+|06|X   |Y   |W   |H   |C |
+C : Color
+
 SetTransColor
-|06|C |
+|07|C |
 C : Color(>0x0f : no tranparent)
 note : apply to all drawing funtion
 

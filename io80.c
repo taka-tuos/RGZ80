@@ -10,7 +10,6 @@ extern int psg_volume[3];
 extern int psg_count[3];
 extern SDL_Joystick *joy;
 extern int rgz_vsync;
-extern int rgz_vram_disp;
 
 fifo_t *gpu_fifo;
 
@@ -102,9 +101,6 @@ void io80_writep(int param, ushort address, byte data)
 	switch(address & 0xff) {
 	case 0x81:
 		rgz_time = TICKS + data + 1;
-		break;
-	case 0x82:
-		rgz_vram_disp ^= 1;
 		break;
 	case 0xb0: case 0xb1:
 		tmp = rgz_addr;

@@ -8,9 +8,10 @@ extern fifo_t *gpu_fifo;
 
 int rgz_vsync=0;
 
+int vdp_trans = 255;
+
 byte rgz_vram[256*768];
-int rgz_vram_disp=0;
-int gpu_drawingarea[4] = {0,0,512,192}; // x0,y0,x1,y1
+int gpu_drawingarea[4] = {0,0,512,768}; // x0,y0,x1,y1
 
 Uint8 colorpalette[16*3] = {
 	0x00, 0x00, 0x00,
@@ -33,7 +34,10 @@ Uint8 colorpalette[16*3] = {
 
 void vdp_ps10(int x, int y, int c)
 {
-	//printf("%d,%d\n",x,y);
+	if(c == vdp_trans) return;
+	if(x >= 512 || x < 0) return;
+	if(y >= 768 || y < 0) return;
+	
 	byte *p = &rgz_vram[y*256+(x/2)];
 	int sft = (x & 1) ? 0 : 4;
 	
@@ -45,7 +49,7 @@ void vdp_ps10(int x, int y, int c)
 
 #define ABSI(n) ((n) > 0 ? (n) : -(n))
 
-void vdp_arrayline(int *ay, int x1, int y1, int x2, int y2)
+void vdp_extline(int x1, int y1, int x2, int y2, void (*ps)(int,int,void *), void *ext)
 {
 	int steep = ABSI(y2-y1) > ABSI(x2-x1);
 	
@@ -83,9 +87,9 @@ void vdp_arrayline(int *ay, int x1, int y1, int x2, int y2)
 	
 	for(int x=x1;x<=x2;x++) {
 		if(steep) {
-			if(x >= 0 && x < 1024) ay[x] = y;
+			ps(y,x,ext);
 		} else {
-			if(y >= 0 && y < 1024) ay[y] = x;
+			ps(x,y,ext);
 		}
 		
 		err -= dy;
@@ -94,6 +98,26 @@ void vdp_arrayline(int *ay, int x1, int y1, int x2, int y2)
 			err+=dx;
 		}
 	}
+}
+
+void ps_arrayline(int x, int y, void *ay)
+{
+	if(y >= 0 && y < 1024) ((int *)ay)[y] = x;
+}
+
+void ps_drawline(int x, int y, void *c)
+{
+	vdp_ps10(x,y,*((int *)c));
+}
+
+void vdp_arrayline(int *ay, int x1, int y1, int x2, int y2)
+{
+	vdp_extline(x1,y1,x2,y2,ps_arrayline,ay);
+}
+
+void vdp_drawline(int x1, int y1, int x2, int y2, int c)
+{
+	vdp_extline(x1,y1,x2,y2,ps_drawline,&c);
 }
 
 #define INTERP(xi,xi1,yi,yi1,x) (yi + ((( yi1 - yi ) * ( x - xi )) / ( xi1 - xi )))
@@ -188,6 +212,20 @@ void vdp_drawtrigon(int *xv, int *yv, int c)
 	//printf("\n");
 }
 
+void vdp_bitblt(int x, int y, int w, int h, byte *src)
+{
+	for(int i=0;i<h;i++) {
+		for(int j=0;j<w;j++) {
+			byte *p = &src[i*(w/2)+(j/2)];
+			int sft = (j & 1) ? 0 : 4;
+			
+			int dot = (*p >> sft) & 0x0f;
+			
+			vdp_ps10(x+j,y+i,dot);
+		}
+	}
+}
+
 void init_vdp(void)
 {
 	gpu_fifo = (fifo_t *)malloc(sizeof(fifo_t));
@@ -213,10 +251,77 @@ int16_t fifo_read16s(fifo_t *fifo)
 	return m;
 }
 
+uint16_t fifo_read16u(fifo_t *fifo)
+{
+	uint8_t lo = fifo_get(fifo);
+	uint8_t hi = fifo_get(fifo);
+	
+	unsigned int n = lo | (hi << 8);
+	
+	uint16_t m;
+	
+	*((unsigned short *)&m) = n;
+	
+	return m;
+}
+
 void vdp_flush(void)
 {
 	while(fifo_status(gpu_fifo)) {
 		int cmd = fifo_get(gpu_fifo);
+		
+		if(cmd == 0x00) {
+			int c = fifo_read8u(gpu_fifo);
+			
+			for(int i=0;i<192;i++) {
+				for(int j=0;j<512;j++) {
+					vdp_ps10(j,i,c);
+				}
+			}
+		}
+		
+		if(cmd == 0x01) {
+			int x = fifo_read16s(gpu_fifo);
+			int y = fifo_read16s(gpu_fifo);
+			int w = fifo_read16s(gpu_fifo);
+			int h = fifo_read16s(gpu_fifo);
+			int q = fifo_read16u(gpu_fifo);
+			
+			vdp_bitblt(x,y,w,h,z80_memory+q);
+		}
+		
+		if(cmd == 0x02) {
+			int x = fifo_read16s(gpu_fifo);
+			int y = fifo_read16s(gpu_fifo);
+			int w = fifo_read16s(gpu_fifo);
+			int h = fifo_read16s(gpu_fifo);
+			int o = fifo_read16u(gpu_fifo);
+			
+			for(int i=0;i<h;i++) {
+				for(int j=0;j<w;j++) {
+					byte *p = &rgz_vram[i*256+(j/2)];
+					byte *q = &z80_memory[o+i*(w/2)+(j/2)];
+					
+					int sft = (x & 1) ? 0 : 4;
+					
+					int dot = *q & (0xf0 >> sft);
+					dot |= (*p & 0x0f) << sft;
+					
+					*q = dot;
+				}
+			}
+		}
+		
+		if(cmd == 0x03) {
+			int x = fifo_read16s(gpu_fifo);
+			int y = fifo_read16s(gpu_fifo);
+			int w = fifo_read16s(gpu_fifo);
+			int h = fifo_read16s(gpu_fifo);
+			int x2 = fifo_read16u(gpu_fifo);
+			int y2 = fifo_read16u(gpu_fifo);
+			
+			vdp_bitblt(x2,y2,w,h,z80_memory+(y*256+(x/2)));
+		}
 		
 		if(cmd == 0x04) {
 			int x[3], y[3];
@@ -225,7 +330,38 @@ void vdp_flush(void)
 				y[i] = fifo_read16s(gpu_fifo);
 			}
 			int c = fifo_read8u(gpu_fifo);
+			
 			vdp_drawtrigon(x,y,c);
+		}
+		
+		if(cmd == 0x05) {
+			int x1 = fifo_read16s(gpu_fifo);
+			int y1 = fifo_read16s(gpu_fifo);
+			int x2 = fifo_read16s(gpu_fifo);
+			int y2 = fifo_read16s(gpu_fifo);
+			int c = fifo_read8u(gpu_fifo);
+			
+			vdp_drawline(x1,y1,x2,y2,c);
+		}
+		
+		if(cmd == 0x06) {
+			int x = fifo_read16s(gpu_fifo);
+			int y = fifo_read16s(gpu_fifo);
+			int w = fifo_read16s(gpu_fifo);
+			int h = fifo_read16s(gpu_fifo);
+			int c = fifo_read8u(gpu_fifo);
+			
+			for(int i=y;i<y+h;i++) {
+				for(int j=x;j<x+w;j++) {
+					vdp_ps10(j,i,c);
+				}
+			}
+		}
+		
+		if(cmd == 0x07) {
+			int c = fifo_read8u(gpu_fifo);
+			
+			vdp_trans = c;
 		}
 	}
 }

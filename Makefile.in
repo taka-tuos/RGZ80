@@ -12,7 +12,7 @@ default :
 
 # rules
 
-$(TARGET) : $(OBJS_TARGET) Makefile Makefile.in
+$(TARGET) : $(OBJS_TARGET) Makefile Makefile.in $(ADDITIONAL_BUILD)
 	$(GCC) $(OBJS_TARGET) $(LIBS) -o $(TARGET)
 
 # normal rules
