@@ -139,6 +139,12 @@ void vdp_drawtrigon(int *xv, int *yv, int c)
 	int ymax = gpu_drawingarea[3];
 	
 	for(int i=0;i<3;i++) {
+		printf("p[%d]=%d,%d\n",i,xv[i],yv[i]);
+	}
+	
+	printf("\n");
+	
+	for(int i=0;i<3;i++) {
 		if(yv[i] > maxy) {
 			maxy = yv[i];
 			mai = i;
@@ -265,6 +271,34 @@ uint16_t fifo_read16u(fifo_t *fifo)
 	return m;
 }
 
+float fifo_read32f(fifo_t *fifo)
+{
+	uint8_t llo = fifo_get(fifo);
+	uint8_t lhi = fifo_get(fifo);
+	uint8_t hlo = fifo_get(fifo);
+	uint8_t hhi = fifo_get(fifo);
+	
+	unsigned int n = (unsigned int)llo | ((unsigned int)lhi << 8) | ((unsigned int)hlo << 16) | ((unsigned int)hhi << 24);
+	
+	float m;
+	
+	*((unsigned int *)&m) = n;
+	
+	return m;
+}
+
+void fifo_write32f(fifo_t *fifo, float n)
+{
+	unsigned int m;
+	
+	*((float *)&m) = n;
+	
+	fifo_put(fifo, m & 0xff);
+	fifo_put(fifo, (m >> 8) & 0xff);
+	fifo_put(fifo, (m >> 16) & 0xff);
+	fifo_put(fifo, (m >> 24) & 0xff);
+}
+
 void vdp_flush(void)
 {
 	while(fifo_status(gpu_fifo)) {
@@ -362,6 +396,31 @@ void vdp_flush(void)
 			int c = fifo_read8u(gpu_fifo);
 			
 			vdp_trans = c;
+		}
+		
+		if(cmd == 0x80) {
+			/*float x = fifo_read32f(gpu_fifo);
+			printf("%f\n",x);
+			fifo_write32f(gpu_fifo,1.0f);
+			return;*/
+			float x = fifo_read32f(gpu_fifo);
+			float y = fifo_read32f(gpu_fifo);
+			float cx = fifo_read32f(gpu_fifo);
+			float cy = fifo_read32f(gpu_fifo);
+			float r = fifo_read32f(gpu_fifo);
+			
+			x -= cx;
+			y -= cy;
+			
+			float fx = (x * cos(r)) - (y * sin(r));
+			float fy = (x * sin(r)) + (y * cos(r));
+			
+			fx += cx;
+			fy += cy;
+			
+			fifo_write32f(gpu_fifo, fx);
+			fifo_write32f(gpu_fifo, fy);
+			return;
 		}
 	}
 }

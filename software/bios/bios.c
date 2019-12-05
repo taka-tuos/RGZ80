@@ -193,6 +193,39 @@ void fifoput16u(unsigned short w)
 	fifoput8((w >> 8) & 0xff);
 }
 
+unsigned char fifoget8(void)
+{
+	return io_in(0xc1);
+}
+
+void fifoput32f(float n)
+{
+	unsigned long m;
+	
+	*((float *)&m) = n;
+	
+	fifoput8(m & 0xff);
+	fifoput8((m >> 8) & 0xff);
+	fifoput8((m >> 16) & 0xff);
+	fifoput8((m >> 24) & 0xff);
+}
+
+float fifoget32f(void)
+{
+	unsigned char llo = fifoget8();
+	unsigned char lhi = fifoget8();
+	unsigned char hlo = fifoget8();
+	unsigned char hhi = fifoget8();
+	
+	unsigned long n = (unsigned long)llo | ((unsigned long)lhi << 8) | ((unsigned long)hlo << 16) | ((unsigned long)hhi << 24);
+	
+	float m;
+	
+	*((unsigned long *)&m) = n;
+	
+	return m;
+}
+
 void drawpoly(int x1, int y1, int x2, int y2, int x3, int y3, int c)
 {
 	fifoput8(4);
@@ -232,13 +265,34 @@ static const int sbox[2*4] = {
 	12, -12
 };
 
-#define RX(x,y,r) (((x) * cos(i)) >> 6) - (((y) * sin(i)) >> 6)
-#define RY(x,y,r) (((x) * sin(i)) >> 6) + (((y) * cos(i)) >> 6)
+static const int stri[2*4] = {
+	-48, -24,
+	48, -24,
+	0, 24
+};
+
+#define RX(x,y,r) (((x) * cos(r)) >> 6) - (((y) * sin(r)) >> 6)
+#define RY(x,y,r) (((x) * sin(r)) >> 6) + (((y) * cos(r)) >> 6)
 
 #define NUM 128
 
+void hwt_rot2d(float x, float y, float r, float *fx, float *fy)
+{
+	fifoput8(0x80);
+	fifoput32f(x);
+	fifoput32f(y);
+	fifoput32f(0);
+	fifoput32f(0);
+	fifoput32f(r);
+	io_out(0xc0,0);
+	
+	*fx = fifoget32f();
+	*fy = fifoget32f();
+}
+
 void main()
 {
+#if 0
 	static int x[NUM],y[NUM];
 	static int u[NUM],v[NUM];
 	static unsigned char c[NUM],o[NUM];
@@ -255,16 +309,60 @@ void main()
 		c[i] = rand() % 15+1;
 		o[i] = 0; 
 	}
+#endif
 	
 	//fifoput8(7);
 	//fifoput8(15);
 	//io_out(0xc0,0);
 	
+	int r=0;
+	
 	while(1) {
 		//drawpoly(0,0,512,0,512,192,0);
 		//drawpoly(0,0,0,192,512,192,0);
+		int x[3],y[3];
+		
+		for(int i=0;i<3;i++) {
+			//int xp = RX(stri[i*2+0],0,r);
+			//int zp = RY(stri[i*2+0],0,r);
+			//int yp = stri[i*2+1];
+			
+			//float m = 1000.0f / (1000.0f + (float)(zp+100));
+			
+			//x[i] /= m;
+			//y[i] /= m;
+			
+			//float fx = (float)xp / 10.0f / m * 96.0f;
+			//float fy = (float)yp / 10.0f / m * 96.0f;
+			
+			float fx,fz;
+			hwt_rot2d(stri[i*2+0],0,(float)r*0.03,&fx,&fz);
+			float fy = stri[i*2+1];
+			
+			float m = 1000.0f / (1000.0f + (float)fz + 50.0f);
+			
+			fx = fx / m;
+			fy = fy / m;
+			
+			x[i] = (int)fx + 256;
+			y[i] = (int)fy + 96;
+			//x[i] = stri[i*2+0] + 256;
+			//y[i] = stri[i*2+1] + 96;
+		}
+		
+		fifoput8(0x80);
+		fifoput32f(3);
+		io_out(0xc0,0);
+		
+		int n = fifoget32f();
+		
 		fifoput8(0);
 		fifoput8(0);
+		
+		drawpoly(x[0],y[0],x[1],y[1],x[2],y[2],sizeof(long)+n);
+		
+		r++;
+#if 0
 		for(int i=0;i<NUM;i++) {
 			int tbox[2*4];
 			
@@ -283,7 +381,6 @@ void main()
 			//q = 128;
 			//p = -2;
 			
-#if 0
 			tbox[0] = RX(sbox[0],sbox[1],r) + q;
 			tbox[1] = RY(sbox[0],sbox[1],r) + p;
 			
@@ -295,7 +392,6 @@ void main()
 			
 			tbox[6] = RX(sbox[6],sbox[7],r) + q;
 			tbox[7] = RY(sbox[6],sbox[7],r) + p;
-#endif
 			
 			/*tbox[0] = sbox[0] + q;
 			tbox[1] = sbox[1] + p;
@@ -319,8 +415,11 @@ void main()
 			fifoput16s(24);
 			fifoput16u((unsigned short)bitblt_pic);
 		}
+#endif
 		
 		io_out(0xc0,0);
 		io_out(0x82,0);
+		
+		while(!io_in(0x82));
 	}
 }

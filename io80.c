@@ -35,6 +35,8 @@ byte io80_readp(int param, ushort address)
 	int ret = 0;
 
 	int kmode[8];
+	
+	//printf("READ %02x\n",address & 0xff);
 
 	switch(address & 0xff) {
 	case 0x80:

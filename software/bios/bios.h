@@ -1,5 +1,5 @@
 #include <string.h>
 
 void io_hlt(void);
-void io_out(char port, char data);
-int io_in(char port);
+void io_out(unsigned char port, unsigned char data);
+unsigned char io_in(unsigned char port);

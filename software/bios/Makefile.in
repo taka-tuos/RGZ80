@@ -29,3 +29,6 @@ clean :
 
 %.o : %.c Makefile
 	$(SDCC) $(CFLAGS) -o $*.o -c $*.c
+
+%.o : %.s Makefile
+	$(SDASZ80) -o $*.o $*.s
